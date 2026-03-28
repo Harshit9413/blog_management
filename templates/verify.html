@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Verify OTP</title>
+</head>
+
+<body style="display:flex;justify-content:center;align-items:center;height:100vh;background:#667eea;color:white;">
+
+<div style="background:rgba(255,255,255,0.15);padding:30px;border-radius:15px;">
+
+<h2>Verify OTP</h2>
+
+{% if message %}
+<p style="color:yellow;">{{ message }}</p>
+{% endif %}
+
+<form action="/verify-otp" method="post">
+
+<input type="hidden" name="email" value="{{ email }}">
+
+<input type="text" name="otp" placeholder="Enter OTP" required><br><br>
+
+<input type="password" name="new_password" placeholder="New Password" required><br><br>
+
+<button type="submit">Submit</button>
+
+</form>
+
+</div>
+
+</body>
+</html>

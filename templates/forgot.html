@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Forgot Password</title>
+
+<style>
+body{
+    margin:0;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background: linear-gradient(135deg,#667eea,#764ba2);
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.card{
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(15px);
+    padding:40px;
+    border-radius:20px;
+    width:320px;
+    color:white;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    text-align:center;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    margin:10px 0;
+    border:none;
+    border-radius:10px;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:10px;
+    background:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+#message{
+    margin-bottom:10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h2>Verify OTP</h2>
+
+<p id="message"></p>
+
+<div id="step1">
+    <input id="email" type="email" placeholder="Enter Email">
+    <button onclick="sendOTP()">Send OTP</button>
+</div>
+
+<div id="step2" style="display:none;">
+    <input id="otp" placeholder="Enter OTP">
+    <button onclick="verifyOTP()">Confirm</button>
+</div>
+
+</div>
+
+<script>
+
+let userEmail = "";
+
+// ✅ SEND OTP
+async function sendOTP(){
+    const email = document.getElementById("email").value;
+
+    if(!email){
+        document.getElementById("message").innerText = "Please enter email";
+        return;
+    }
+
+    const res = await fetch("/forgot-password", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ email })
+    });
+
+    const data = await res.json();
+
+    if(data.error){
+        document.getElementById("message").innerText = data.error;
+    } else {
+        userEmail = email;   // ✅ FIXED
+        document.getElementById("step1").style.display = "none";
+        document.getElementById("step2").style.display = "block";
+        document.getElementById("message").innerText = "OTP sent to your email";
+    }
+}
+
+
+async function verifyOTP(){
+    const otp = document.getElementById("otp").value;
+
+    if(!otp){
+        document.getElementById("message").innerText = "Please enter OTP";
+        return;
+    }
+
+    if(!userEmail){
+        document.getElementById("message").innerText = "Email missing. Restart.";
+        return;
+    }
+
+    const res = await fetch("/verify-otp", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            email: userEmail,
+            otp: otp
+        })
+    });
+
+    const data = await res.json();
+
+    document.getElementById("message").innerText = data.message || data.error;
+
+    if(data.message){
+        setTimeout(() => {
+            // ✅ FIXED LINE
+            window.location.href = `/reset-password?email=${encodeURIComponent(userEmail)}`;
+        }, 1000);
+    }
+}
+
+</script>
+
+</body>
+</html>

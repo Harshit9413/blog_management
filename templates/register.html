@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Create Account</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body{
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background: linear-gradient(135deg,#667eea,#764ba2);
+}
+
+.card{
+    background:rgba(255,255,255,0.15);
+    backdrop-filter:blur(15px);
+    padding:40px;
+    border-radius:20px;
+    width:360px;
+    color:white;
+    box-shadow:0 15px 40px rgba(0,0,0,0.3);
+}
+
+.card h2{
+    text-align:center;
+    margin-bottom:25px;
+}
+
+.input-group{
+    margin-bottom:18px;
+}
+
+.input-group input,
+.input-group select{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    background:white;
+    color:#333;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.login-link{
+    text-align:center;
+    margin-top:18px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h2>Create Account</h2>
+
+<p id="error" style="color:red;"></p>
+<p id="message"></p>
+{% if message %}
+<p style="color:red;">{{ message }}</p>
+{% endif %} 
+
+<form onsubmit="submitForm(event)">
+
+<div class="input-group">
+<input id="email" type="email" placeholder="Email " required>
+</div>
+
+<div class="input-group">
+<input id="password" type="password" placeholder="Password" required>
+</div>
+
+<div class="input-group">
+<input id="phone" type="text" placeholder="Phone Number">
+</div>
+
+<div class="input-group">
+<select id="gender">
+<option value="">Select Gender</option>
+<option value="male">Male</option>
+<option value="female">Female</option>
+<option value="other">Other</option>
+</select>
+</div>
+
+<button type="submit">Register</button>
+
+</form>
+
+<div class="login-link">
+Already have an account? <a href="/login">Login</a>
+</div>
+
+</div>
+<script>
+async function submitForm(e) {
+    e.preventDefault();
+
+    const res = await fetch("/register", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            email: email.value,
+            password: password.value,
+            phone: phone.value,
+            gender: gender.value
+        })
+    });
+
+    const data = await res.json();
+
+    error.innerText = data.error || "";
+    message.innerText = data.message || "";
+
+    // ✅ redirect manually
+    if (res.ok) {
+        setTimeout(() => {
+            window.location.href = "/login?msg=" + encodeURIComponent(data.message);
+        }, 1000);
+    }
+}
+</script>
+</body>
+</html>

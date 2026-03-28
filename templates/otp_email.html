@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #f6f9f6; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+            <td align="center" style="padding: 20px 0;">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 500px; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    
+                    <tr>
+                        <td align="center" style="background-color: #1a2e1a; padding: 40px 20px;">
+                            <div style="font-size: 40px; margin-bottom: 10px;">🔐</div>
+                            <h1 style="color: #ffffff; margin: 0; font-size: 22px; text-transform: uppercase; letter-spacing: 2px;">Two-Factor Authentication</h1>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <p style="font-size: 16px; color: #333333; margin: 0;">Hi <strong>{{ username }}</strong>,</p>
+                            <p style="font-size: 15px; color: #666666; line-height: 1.5; margin-top: 10px;">
+                                Use the code below to complete your sign-in. This code is valid for <strong>5 minutes</strong>.
+                            </p>
+
+                            <div style="margin: 35px 0; border: 2px dashed #3e5c3e; border-radius: 12px; padding: 30px; text-align: center; background-color: #f9fff9;">
+                                <p style="text-transform: uppercase; letter-spacing: 1.5px; font-size: 12px; color: #3e5c3e; font-weight: bold; margin-bottom: 15px; margin-top: 0;">Login Verification Code</p>
+                                <div style="font-size: 42px; font-weight: 800; letter-spacing: 8px; color: #1a2e1a; font-family: 'Courier New', Courier, monospace;">
+                                    {{ otp }}
+                                </div>
+                                <p style="font-size: 12px; color: #999999; margin-top: 15px; margin-bottom: 0;">
+                                    ⏱ Expires in 5 minutes
+                                </p>
+                            </div>
+
+                            <p style="font-size: 13px; color: #999999; line-height: 1.4; border-top: 1px solid #eeeeee; padding-top: 20px;">
+                                If you didn't request this, please ignore this email or contact support if you have concerns.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

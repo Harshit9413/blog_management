@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Success</title>
+
+<style>
+body{
+    margin:0;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background: linear-gradient(135deg,#1e3c72,#2a5298);
+    font-family: Arial;
+}
+
+.card{
+    background:white;
+    padding:30px;
+    width:350px;
+    border-radius:20px;
+    text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,0.2);
+}
+
+h2{
+    margin-bottom:10px;
+}
+
+p{
+    color:#666;
+    font-size:14px;
+}
+
+.btn{
+    margin-top:20px;
+    padding:12px;
+    width:100%;
+    background:#1e3c72;
+    color:white;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+    <h2>Password changed!</h2>
+
+    <p>{{ message }}</p>
+
+    <button class="btn" onclick="window.location.href='/login'">
+        Log in now
+    </button>
+</div>
+
+</body>
+</html>

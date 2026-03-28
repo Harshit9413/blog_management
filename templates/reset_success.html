@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Password Changed</title>
+
+<style>
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #0f3c8c, #1e5bd1);
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card {
+    background: #ffffff;
+    padding: 40px 30px;
+    width: 350px;
+    text-align: center;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.icon {
+    font-size: 60px;
+    color: #f4b400;
+    margin-bottom: 20px;
+}
+
+h2 {
+    margin: 10px 0;
+    color: #222;
+}
+
+p {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 25px;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    background: #1e5bd1;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #0f3c8c;
+}
+</style>
+
+</head>
+<body>
+
+<div class="card">
+    <div class="icon">🏆</div>
+
+    <h2>Password Changed!</h2>
+
+    <p>
+        You have successfully created a new password.<br>
+        Click below to log in with your new password.
+    </p>
+
+    <form action="/login" method="get">
+        <button type="submit">Log in now</button>
+    </form>
+</div>
+
+</body>
+</html>

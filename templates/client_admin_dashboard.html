@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Client Admin Dashboard</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+body {
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    font-family: 'Segoe UI', sans-serif;
+    color: #fff;
+}
+
+.navbar {
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(10px);
+    padding: 12px 20px;
+}
+
+.glass-card {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(12px);
+    border-radius: 15px;
+    padding: 30px;
+    margin-top: 30px;
+}
+
+.avatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: #fff;
+    color: #764ba2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.5rem;
+    margin: 0 auto 15px;
+}
+
+.btn-logout {
+    background: #ff4b5c;
+    border: none;
+}
+
+.table {
+    color: white;
+}
+
+.status-msg {
+    font-size: 0.85rem;
+    margin-top: 3px;
+}
+</style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark">
+    <div class="container-fluid">
+        <span class="navbar-brand">🚀 Client Admin Dashboard</span>
+        <div class="d-flex align-items-center gap-3">
+            <span>👤 {{ user.role }}</span>
+            <form action="/logout" method="post">
+                <button class="btn btn-logout btn-sm">Logout</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div class="container text-center">
+    <div class="glass-card">
+        <div class="avatar">{{ user.email[0]|upper }}</div>
+        <h2>Welcome, {{ user.email }} 👋</h2>
+    </div>
+</div>
+
+<div class="container mt-4">
+    <div class="glass-card">
+        <div class="d-flex justify-content-between mb-3">
+            <h4>👤 Manage Users</h4>
+            <input type="text" id="searchInput"
+                   class="form-control w-50"
+                   placeholder="Search email..."
+                   oninput="loadUsers(this.value)">
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle text-white">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Email (Editable)</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody id="userTableBody">
+                    <tr><td colspan="5" class="text-center">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function apiFetch(url, options = {}) {
+    return fetch(url, {
+        ...options,
+        credentials: "include",
+        headers: { "Content-Type": "application/json" }
+    });
+}
+
+// Load users
+function loadUsers(search = "") {
+    const url = search
+        ? `/client-admin/users-json?search=${encodeURIComponent(search)}`
+        : `/client-admin/users-json`;
+
+    apiFetch(url)
+        .then(res => res.json())
+        .then(data => renderTable(data))
+        .catch(err => console.error(err));
+}
+
+// Render table
+function renderTable(users) {
+    const tbody = document.getElementById("userTableBody");
+
+    if (!Array.isArray(users) || users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center">No users found</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = users.map((u, i) => `
+        <tr id="row-${u.id}">
+            <td>${i + 1}</td>
+            <td>
+                <input type="text" id="email-${u.id}" value="${u.email}" class="form-control form-control-sm">
+                <div id="status-${u.id}" class="status-msg text-warning"></div>
+            </td>
+            <td>
+                <span class="badge ${u.is_active ? 'bg-success' : 'bg-danger'}">
+                    ${u.is_active ? 'Active' : 'Blocked'}
+                </span>
+            </td>
+            <td>
+                <button id="btn-toggle-${u.id}" onclick="toggleUser(${u.id})"
+                        class="btn btn-sm ${u.is_active ? 'btn-warning' : 'btn-success'}">
+                        ${u.is_active ? 'Block' : 'Unblock'}
+                </button>
+                <button id="btn-update-${u.id}" onclick="updateEmail(${u.id})"
+                        class="btn btn-sm btn-info mt-1">
+                        ✏️ Update
+                </button>
+            </td>
+            <td>
+               <button id="btn-delete-${u.id}" onclick="deleteUser(${u.id})"
+                 class="btn btn-sm btn-danger">
+                  🗑 Delete
+                </button>
+            </td>
+        </tr>
+    `).join("");
+}
+
+// Toggle user
+function toggleUser(id) {
+    const btn = document.getElementById(`btn-toggle-${id}`);
+    btn.disabled = true;
+    btn.innerText = "Updating...";
+
+    apiFetch(`/client-admin/toggle-user/${id}`, { method: "POST" })
+        .then(res => res.json())
+        .then(() => loadUsers())
+        .catch(() => { btn.disabled = false; btn.innerText = "Block/Unblock"; });
+}
+
+// Update email
+function updateEmail(id) {
+    const email = document.getElementById(`email-${id}`).value;
+    const btn = document.getElementById(`btn-update-${id}`);
+    const status = document.getElementById(`status-${id}`);
+
+    if (!email) {
+        status.innerText = "Email required";
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = "Updating...";
+    status.innerText = "";
+
+    apiFetch(`/client-admin/update-email/${id}`, {
+        method: "POST",
+        body: JSON.stringify({ email })
+    })
+    .then(res => res.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerText = "✏️ Update";
+
+        if (data.success) {
+            status.innerText = "Updated ✔";
+            status.className = "status-msg text-success";
+            setTimeout(() => loadUsers(), 800);
+        } else {
+            status.innerText = "❌ " + data.error;
+            status.className = "status-msg text-danger";
+        }
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btn.innerText = "✏️ Update";
+        status.innerText = "❌ Error occurred";
+        status.className = "status-msg text-danger";
+    });
+}
+
+// Delete user
+function deleteUser(id) {
+
+    // ✅ CONFIRMATION (same as super admin)
+    const ok = confirm("Are you sure you want to delete this user?");
+    if (!ok) return;
+
+    const btn = document.getElementById(`btn-delete-${id}`);
+    btn.disabled = true;
+    btn.innerText = "Deleting...";
+
+    apiFetch(`/client-admin/delete-user/${id}`, {
+        method: "POST"
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if (data.success) {
+            // ✅ remove row instantly (no reload)
+            const row = document.getElementById(`row-${id}`);
+            if (row) row.remove();
+
+        } else {
+            alert(data.error || "Delete failed");
+            btn.disabled = false;
+            btn.innerText = "🗑 Delete";
+        }
+
+    })
+    .catch(() => {
+        alert("Server error");
+        btn.disabled = false;
+        btn.innerText = "🗑 Delete";
+    });
+}
+
+// Init
+loadUsers();
+</script>
+
+</body>
+</html>

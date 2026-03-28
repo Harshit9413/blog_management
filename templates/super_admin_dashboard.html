@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Super Admin Panel</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body {
+    background: linear-gradient(135deg,#667eea,#764ba2);
+    color: white;
+    padding: 30px;
+}
+.card {
+    background: rgba(255,255,255,0.1);
+    padding: 20px;
+    border-radius: 12px;
+}
+.table { color: white; }
+.search-box {
+    background: rgba(255,255,255,0.15);
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="d-flex justify-content-between mb-4">
+    <h2>🚀 Super Admin Panel</h2>
+
+    
+    <form action="/logout" method="post" id="logoutForm">
+        <button class="btn btn-danger" type="submit">Logout</button>
+    </form>
+</div>
+
+<!-- Stats -->
+<div class="row mb-4">
+    <div class="col"><div class="card text-center"><h5>Total</h5><div id="total">0</div></div></div>
+    <div class="col"><div class="card text-center"><h5>Admins</h5><div id="admins">0</div></div></div>
+    <div class="col"><div class="card text-center"><h5>Super</h5><div id="superadmins">0</div></div></div>
+</div>
+
+<div class="card">
+    <div class="d-flex justify-content-between mb-3">
+        <h4>Users</h4>
+        <input type="text" id="searchInput" class="search-box w-50"
+               placeholder="Search..." oninput="loadUsers(this.value)">
+    </div>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+                <th>Role Change</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody id="userTableBody"></tbody>
+    </table>
+</div>
+
+<script>
+
+// ✅ CHANGE 2: URL LOCK — logout tak URL change nahi hogi
+const ADMIN_URL = "/super-admin/dashboard";
+let isLoggingOut = false;
+
+history.replaceState(null, "", ADMIN_URL);
+
+window.addEventListener("popstate", function () {
+    if (!isLoggingOut) {
+        history.pushState(null, "", ADMIN_URL);
+    }
+});
+
+document.addEventListener("click", function (e) {
+    const anchor = e.target.closest("a");
+    if (anchor && !isLoggingOut) {
+        const href = anchor.getAttribute("href");
+        if (href && href !== "#" && !href.startsWith("/logout")) {
+            e.preventDefault();
+            history.replaceState(null, "", ADMIN_URL);
+        }
+    }
+});
+
+document.getElementById("logoutForm").addEventListener("submit", function () {
+    isLoggingOut = true;
+});
+
+// =============================================
+
+// API helper
+function apiFetch(url, options = {}) {
+    return fetch(url, {
+        ...options,
+        credentials: "include",
+        headers: { "Content-Type": "application/json" }
+    });
+}
+
+// Load stats
+apiFetch("/super-admin/stats")
+.then(r => r.json())
+.then(d => {
+    total.innerText = d.total;
+    admins.innerText = d.admins;
+    superadmins.innerText = d.superadmins;
+});
+
+// Load users
+function loadUsers(search="") {
+    const url = search
+        ? `/super-admin/users-json?search=${search}`
+        : `/super-admin/users-json`;
+
+    apiFetch(url)
+    .then(r=>r.json())
+    .then(data=>renderTable(data));
+}
+
+// Render table
+function renderTable(users){
+    const tbody = document.getElementById("userTableBody");
+
+    tbody.innerHTML = users.map((u,i)=>`
+        <tr>
+            <td>${i+1}</td>
+            <td>
+                <input type="text"
+                    id="email-${u.id}"
+                    value="${u.email}"
+                    class="form-control form-control-sm">
+            </td>
+            <td><b>${u.role}</b></td>
+            <td>
+                <span class="badge ${u.is_active ? 'bg-success':'bg-danger'}">
+                    ${u.is_active ? 'Active':'Blocked'}
+                </span>
+            </td>
+            
+            <td>
+                ${u.role === 'superadmin' ? `
+                    <span class="badge bg-info">Protected</span>
+                ` : `
+                    <button onclick="toggleUser(${u.id})"
+                        class="btn btn-sm ${u.is_active ? 'btn-warning':'btn-success'}">
+                        ${u.is_active ? 'Block':'Unblock'}
+                    </button>
+                    <button onclick="updateEmail(${u.id})"
+                        class="btn btn-info btn-sm mt-1">
+                        Update Email
+                    </button>
+                `}
+            </td>
+            <td>
+                ${u.role === 'superadmin' ? `
+                    <span class="badge bg-primary">Super Admin</span>
+                ` : `
+                    <select id="role-${u.id}" class="form-select form-select-sm">
+                        <option value="user" ${u.role=='user'?'selected':''}>User</option>
+                        <option value="clientadmin" ${u.role=='clientadmin'?'selected':''}>Client Admin</option>
+                    </select>
+                    <button onclick="updateRole(${u.id})"
+                        class="btn btn-warning btn-sm mt-1">
+                        Update
+                    </button>
+                `}
+            </td>
+           <td>
+    ${u.role === 'superadmin' ? `
+        <span class="text-muted">Protected</span>
+    ` : `
+        <form action="/super-admin/delete-user/${u.id}" method="post"
+              onsubmit="return confirmDelete(event)">
+            <button class="btn btn-danger btn-sm">
+                🗑 Delete
+            </button>
+        </form>
+    `}
+</td>
+        </tr>
+    `).join("");
+}
+
+// Block / Unblock
+function toggleUser(id){
+    apiFetch(`/super-admin/toggle-user/${id}`, {method:"POST"})
+    .then(r=>r.json())
+    .then(d=>{
+        if(d.success) loadUsers();
+        else console.log(d.error);
+    });
+}
+
+// Update role
+function updateRole(id){
+    const role = document.getElementById(`role-${id}`).value;
+    const btn  = document.getElementById(`btn-${id}`);
+
+    btn.innerText = "Updating...";
+    btn.disabled  = true;
+
+    apiFetch(`/super-admin/update-role/${id}`,{
+        method:"POST",
+        body:JSON.stringify({ role: role })
+    })
+    .then(r=>r.json())
+    .then(d=>{
+        if(d.success){
+            btn.innerText = "Updated ✔";
+            setTimeout(loadUsers, 800);
+        } else {
+            console.log(d.error);
+            btn.innerText = "Update";
+            btn.disabled  = false;
+        }
+    })
+    .catch(()=>{
+        console.log("Error occurred");
+        btn.innerText = "Update";
+        btn.disabled  = false;
+    });
+}
+
+function confirmDelete(e) {
+    const ok = confirm("Are you sure you want to delete this user?");
+
+    if (!ok) {
+        e.preventDefault();   // ✅ STOP delete
+        return false;
+    }
+
+    return true; // ✅ allow delete
+}
+
+// Update email
+function updateEmail(id){
+    const email = document.getElementById(`email-${id}`).value;
+
+    apiFetch(`/super-admin/update-email/${id}`,{
+        method:"POST",
+        body:JSON.stringify({email})
+    })
+    .then(r=>r.json())
+    .then(d=>{
+        if(d.success){
+            alert("Email updated");
+            loadUsers();
+        } else {
+            alert(d.error);
+        }
+    });
+}
+
+loadUsers();
+
+</script>
+</body>
+</html>
