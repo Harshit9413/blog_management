@@ -211,11 +211,10 @@ def login_page(request: Request):
     msg = request.query_params.get("msg", "")
     print()
     
-    #return templates.TemplateResponse("login.html", {"request": request, "message": msg})
     return templates.TemplateResponse(
         request,
         "login.html",
-        {"message": msg}
+        {"request": request, "message": msg, "name":"vishal"}
     )
 
 @app.post("/login")
@@ -288,7 +287,7 @@ def super_admin_dashboard(request: Request, db: Session = Depends(get_db)):
     if err:
         return err
        
-    return templates.TemplateResponse("super_admin_dashboard.html", {
+    return templates.TemplateResponse(request, "super_admin_dashboard.html", {
         "request": request,
         "user": user
     })
@@ -307,7 +306,7 @@ def view_users(request: Request, db: Session = Depends(get_db)):
     else:
         users = db.query(models.User).all()
 
-    return templates.TemplateResponse(
+    return templates.TemplateResponse(request, 
         "manage_users.html",
         {"request": request, "users": users, "user": user, "search": search}
     )
@@ -459,7 +458,7 @@ def client_admin_dashboard(request: Request, db: Session = Depends(get_db)):
     # Fetch only normal users
     users = db.query(models.User).filter(models.User.role == "user").all()
 
-    return templates.TemplateResponse(
+    return templates.TemplateResponse(request, 
         "client_admin_dashboard.html",
         {
             "request": request,
@@ -569,7 +568,7 @@ def verify_otp(data: VerifyOTP, db: Session = Depends(get_db)):
 
 @app.get("/reset-password", response_class=HTMLResponse)
 def reset_password_page(request: Request):
-    return templates.TemplateResponse("reset_password.html", {"request": request})
+    return templates.TemplateResponse(request, "reset_password.html", {"request": request})
 
 @app.post("/reset-password")
 def reset_password(request: Request, data: ResetPassword, db: Session = Depends(get_db)):
@@ -585,7 +584,7 @@ def reset_password(request: Request, data: ResetPassword, db: Session = Depends(
 
 @app.get("/password-updated", response_class=HTMLResponse)
 def password_updated(request: Request):
-    return templates.TemplateResponse(
+    return templates.TemplateResponse(request, 
         "success.html",
         {"request": request, "message": "Password updated successfully"}
     )
