@@ -66,8 +66,7 @@ class UserCreate(BaseModel):
         if not re.match(r"^[6-9]\d{9}$", v):
             raise ValueError("Invalid phone (10 digits, start with 6-9)")
         return v
-    
-print("blog  router load")
+
 @field_validator("password")
 def validate_password(cls, v):
         if len(v) < 6:
@@ -112,7 +111,7 @@ class EmailUpdate(BaseModel):
     email: str
 
 
-class UpdateRoleBody(BaseModel):
+class UpdateRoleBod(BaseModel):
     role: str
 
     @field_validator("role")
