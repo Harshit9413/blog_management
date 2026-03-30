@@ -3,7 +3,7 @@ import re
 import random
 import smtplib
 from datetime import datetime, timedelta
-from email.mime.multipart import MIMEMultipart
+# from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from dotenv import load_dotenv
@@ -13,19 +13,19 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, EmailStr, field_validator
 from sqlalchemy.orm import Session
-
+from blog_router import router as blog_router
 import auth
 import models
 from database import sessionlocal, engine
 
 models.Base.metadata.create_all(bind=engine)
 load_dotenv()
-
+templates = Jinja2Templates(directory="templates")  # ✅
 BASE_DIR  = os.path.dirname(os.path.abspath(__file__))
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
-templates.env.cache = None   # 🔥 disable cache completely
-app       = FastAPI()
 
+app       = FastAPI()
+app.include_router(blog_router)
 SENDER_EMAIL    = os.getenv("SENDER_EMAIL",    "harshitjangid99291@gmail.com")
 SENDER_PASSWORD = os.getenv("SENDER_PASSWORD", "cqijkpmkflgowpky")
 
@@ -51,6 +51,8 @@ def send_email(to_email: str, otp: str) -> tuple[bool, str]:
 
 
 
+class UpdateRoleBody(BaseModel):
+    role: str
 class UserCreate(BaseModel):
     email:    EmailStr
     password: str
@@ -65,9 +67,9 @@ class UserCreate(BaseModel):
             raise ValueError("Invalid phone (10 digits, start with 6-9)")
         return v
     
-
-    @field_validator("password")
-    def validate_password(cls, v):
+print("blog  router load")
+@field_validator("password")
+def validate_password(cls, v):
         if len(v) < 6:
             raise ValueError("Password must be at least 6 characters")
         if not re.search(r"\d", v):
@@ -163,8 +165,17 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 def register_page(request: Request):
     if request.cookies.get("user_email"):
         return RedirectResponse("/dashboard", status_code=303)
-    return templates.TemplateResponse("register.html", {"request": request})
 
+    return templates.TemplateResponse(
+        request,
+        name="register.html",
+        context={"request": request}
+    )
+
+
+@app.get("/")
+def home():
+    return {"message": "Server running"}
 
 @app.post("/register")
 def register(user_data: UserCreate, request: Request, db: Session = Depends(get_db)):
@@ -179,7 +190,7 @@ def register(user_data: UserCreate, request: Request, db: Session = Depends(get_
         password = auth.hash_password(user_data.password),
         phone    = user_data.phone,
         gender   = user_data.gender,
-        role     = "user",
+        role     = "user"
     )
 
     db.add(new_user)
@@ -198,8 +209,13 @@ def login_page(request: Request):
     msg = request.query_params.get("msg", "")
 
     return templates.TemplateResponse(
-        "login.html",
-        {"request": request, "message": msg}
+        request,
+        "login.html",   # ✅ first argument = template name
+        {               # ✅ second argument = context (MUST include request)
+            "request": request,
+            "name": "Harshit",
+            "message": msg
+        }
     )
 
 @app.post("/login")
@@ -230,9 +246,11 @@ def logout():
 # ─────────────────────────────────────────────────────────────────────────────
 @app.get("/forgot-password", response_class=HTMLResponse)
 def forgot_password_page(request: Request):
-    return templates.TemplateResponse( "forgot_password.html", {"request": request})
-
-
+    return templates.TemplateResponse(
+        request,
+        "forgot_password.html",
+        {"request": request}
+    )
 @app.post("/forgot-password")
 def forgot_password(data: ForgotPassword, db: Session = Depends(get_db)):
     email = data.email.strip().lower()
@@ -269,8 +287,12 @@ def verify_otp(data: VerifyOTP, db: Session = Depends(get_db)):
     if not user.otp or not user.otp_expiry:
         return JSONResponse({"error": "No OTP found"}, status_code=400)
 
-    # ✅ FIX (no fromisoformat)
-    if datetime.utcnow() > user.otp_expiry:
+    # ✅ safe handling (works even if old data is string)
+    expiry = user.otp_expiry
+    if isinstance(expiry, str):
+        expiry = datetime.fromisoformat(expiry)
+
+    if datetime.utcnow() > expiry:
         user.otp = None
         user.otp_expiry = None
         db.commit()
@@ -279,6 +301,7 @@ def verify_otp(data: VerifyOTP, db: Session = Depends(get_db)):
     if user.otp != data.otp:
         return JSONResponse({"error": "Invalid OTP"}, status_code=400)
 
+    # ✅ mark verified
     user.otp = "VERIFIED"
     db.commit()
 
@@ -287,8 +310,10 @@ def verify_otp(data: VerifyOTP, db: Session = Depends(get_db)):
 
 @app.get("/reset-password", response_class=HTMLResponse)
 def reset_password_page(request: Request):
-    return templates.TemplateResponse( "reset_password.html", {"request": request})
-
+    return templates.TemplateResponse(
+        name="reset_password.html",
+        context={"request": request}
+    )
 
 @app.post("/reset-password")
 def reset_password(data: ResetPassword, db: Session = Depends(get_db)):
@@ -319,9 +344,14 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
     user, err = require_role(request, db, "user")
     if err:
         return err
+
     return templates.TemplateResponse(
-        "dashboard.html",
-        {"request": request, "user": user}
+        request,    
+        name="dashboard.html",
+        context={
+            "request": request,
+            "user": user
+        }
     )
 
 @app.get("/super-admin/dashboard", response_class=HTMLResponse)
@@ -330,6 +360,7 @@ def super_admin_dashboard(request: Request, db: Session = Depends(get_db)):
     if err:
         return err
     return templates.TemplateResponse(
+        request,
         "super_admin_dashboard.html",
         {"request": request, "user": user}
     )
@@ -347,6 +378,7 @@ def view_users(request: Request, db: Session = Depends(get_db)):
         q = q.filter(models.User.email.contains(search))
 
     return templates.TemplateResponse(
+        request,
         "manage_users.html",
         {
             "request": request,
@@ -420,15 +452,36 @@ def update_role(user_id: int, data: UpdateRoleBody, request: Request, db: Sessio
     user, err = require_role(request, db, "superadmin")
     if err:
         return JSONResponse({"error": "unauthorized"}, status_code=401)
+
     target = db.query(models.User).filter(models.User.id == user_id).first()
+
     if not target:
         return JSONResponse({"error": "User not found"}, status_code=404)
+
+    # ❌ prevent changing self
+    if target.id == user.id:
+        return JSONResponse({"error": "You cannot change your own role"}, status_code=400)
+
+    # ❌ protect superadmin
     if target.role == "superadmin":
         return JSONResponse({"error": "Cannot change a Super Admin's role"}, status_code=403)
-    target.role = data.role
-    db.commit()
-    return JSONResponse({"success": True})
 
+    # ✅ VALID ROLES ONLY
+    allowed_roles = ["user", "clientadmin", "superadmin"]
+    new_role = data.role.strip().lower()
+
+    if new_role not in allowed_roles:
+        return JSONResponse({"error": "Invalid role"}, status_code=400)
+
+    target.role = new_role
+
+    db.commit()
+    db.refresh(target)   # ✅ important
+
+    return JSONResponse({
+        "success": True,
+        "new_role": target.role
+    })
 
 @app.post("/super-admin/delete-user/{user_id}")
 def delete_user(user_id: int, request: Request, db: Session = Depends(get_db)):
@@ -448,7 +501,7 @@ def delete_user(user_id: int, request: Request, db: Session = Depends(get_db)):
 
 
 @app.get("/super-admin/users", response_class=HTMLResponse)
-def view_users(request: Request, db: Session = Depends(get_db)):
+def view_user(request: Request, db: Session = Depends(get_db)):
     user, err = require_role(request, db, "superadmin")
     if err:
         return err
@@ -460,6 +513,7 @@ def view_users(request: Request, db: Session = Depends(get_db)):
         q = q.filter(models.User.email.contains(search))
 
     return templates.TemplateResponse(
+        request,
         "manage_users.html",
         {
             "request": request,
@@ -468,16 +522,39 @@ def view_users(request: Request, db: Session = Depends(get_db)):
             "search": search
         }
     )
+@app.get("/client-admin/dashboard", response_class=HTMLResponse)
+def client_admin_dashboard(request: Request, db: Session = Depends(get_db)):
+    user, err = require_role(request, db, "clientadmin")
+    if err:
+        return err
 
+    return templates.TemplateResponse(
+        request,
+        "client_admin_dashboard.html",   # your HTML file name
+        {
+            "request": request,
+            "user": user
+        }
+    )
 @app.get("/client-admin/users-json")
 def get_users_client(request: Request, db: Session = Depends(get_db)):
     user, err = require_role(request, db, "clientadmin")
     if err:
         return JSONResponse({"error": "unauthorized"}, status_code=401)
-    users = db.query(models.User).filter(models.User.role == "user").all()
-    return [{"id": u.id, "email": u.email, "is_active": u.is_active} for u in users]
 
+    search = request.query_params.get("search", "").strip()
 
+    q = db.query(models.User).filter(models.User.role == "user")
+
+    if search:
+        q = q.filter(models.User.email.contains(search))
+
+    users = q.all()
+
+    return [
+        {"id": u.id, "email": u.email, "is_active": u.is_active}
+        for u in users
+    ]
 @app.post("/client-admin/toggle-user/{user_id}")
 def toggle_user_client(user_id: int, request: Request, db: Session = Depends(get_db)):
     user, err = require_role(request, db, "clientadmin")
