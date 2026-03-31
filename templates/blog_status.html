@@ -1,0 +1,18 @@
+<h2>Blog Status</h2>
+
+<table border="1" cellpadding="10">
+<tr>
+    <th>Email</th>
+    <th>Title</th>
+    <th>Time</th>
+</tr>
+
+{% for d in data %}
+<tr>
+    <td>{{ d.email }}</td>
+    <td>{{ d.title }}</td>
+    <td>{{ d.time }}</td>
+</tr>
+{% endfor %}
+
+</table>

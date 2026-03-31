@@ -3,10 +3,6 @@ from datetime import datetime
 from typing import List, Optional
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  CATEGORY SCHEMAS
-# ─────────────────────────────────────────────────────────────────────────────
-
 class CategoryCreate(BaseModel):
     name:        str
     description: Optional[str] = None
@@ -37,10 +33,6 @@ class CategoryResponse(BaseModel):
         from_attributes = True
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  TAG SCHEMAS
-# ─────────────────────────────────────────────────────────────────────────────
-
 class TagCreate(BaseModel):
     name: str
 
@@ -62,10 +54,6 @@ class TagResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  BLOG SCHEMAS
-# ─────────────────────────────────────────────────────────────────────────────
 
 class BlogCreate(BaseModel):
     title:        str
@@ -107,38 +95,27 @@ class BlogOwner(BaseModel):
     class Config:
         from_attributes = True
 
-
 class BlogResponse(BaseModel):
-    """Full blog — used for create and get-by-id."""
-    id:          int
-    title:       str
+    id: int
+    title: str
     description: str
-    content:     str
-    user_id:     int
-    created_at:  datetime
-    updated_at:  datetime
-    owner:       BlogOwner
-    categories:  List[CategoryResponse] = []
-    tags:        List[TagResponse]      = []
+    content: str
+    owner_email: str
 
     class Config:
-        from_attributes = True
+        from_attributes = True   # ✅ FIX (Pydantic v2)
 
 
 class BlogSummary(BaseModel):
-    """Lightweight — used in list endpoint, no content field."""
-    id:          int
-    title:       str
-    description: str
-    user_id:     int
-    created_at:  datetime
-    owner:       BlogOwner
-    categories:  List[CategoryResponse] = []
-    tags:        List[TagResponse]      = []
+    id: int
+    title: str
+    description: Optional[str] = None
+    content: Optional[str] = None        # 👈 add this
+    created_at: datetime
+    owner_email: Optional[str] = None    # 👈 add this
 
     class Config:
         from_attributes = True
-
 
 class BlogDeleteResponse(BaseModel):
     message: str

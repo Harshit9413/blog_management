@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Blog Dashboard</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+body, html { margin:0; padding:0; font-family: 'Segoe UI', sans-serif; background:#f0f2f5; }
+header { background:#4a90e2; color:white; padding:20px; text-align:center; font-size:28px; font-weight:bold; box-shadow:0 3px 6px rgba(0,0,0,0.1); }
+.container { max-width:1100px; margin:30px auto; padding:0 20px; }
+.search-sort { display:flex; justify-content:space-between; flex-wrap:wrap; margin-bottom:20px; gap:10px; }
+input[type="text"], select { padding:8px 12px; border-radius:6px; border:1px solid #ccc; width:200px; transition:0.3s; }
+input[type="text"]:focus, select:focus { border-color:#4a90e2; outline:none; box-shadow:0 0 6px rgba(74,144,226,0.3); }
+.grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap:20px; }
+.blog-card { background:white; border-radius:12px; padding:20px; box-shadow:0 4px 12px rgba(0,0,0,0.1); transition:0.3s; cursor:pointer; }
+.blog-card:hover { transform:translateY(-5px); box-shadow:0 10px 25px rgba(0,0,0,0.15); }
+.blog-title { font-size:20px; font-weight:bold; color:#333; margin-bottom:5px; }
+.blog-author { font-size:14px; color:#555; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+.btn-view { padding:6px 14px; border:none; border-radius:6px; background:#4a90e2; color:white; cursor:pointer; transition:0.2s; display:flex; align-items:center; gap:5px; }
+.btn-view:hover { background:#357ABD; }
+.toast { position:fixed; top:20px; right:20px; background:#333; color:white; padding:10px 20px; border-radius:6px; opacity:0; transition:0.5s; z-index:1000; }
+.toast.show { opacity:1; }
+@media(max-width:600px){ .search-sort { flex-direction:column; } input[type="text"], select { width:100%; } }
+</style>
+</head>
+<body>
+
+<header>Blog Dashboard</header>
+<div class="container">
+    <div class="search-sort">
+        <input type="text" id="searchInput" placeholder="Search by title or author..." onkeyup="filterBlogs()">
+        <select id="sortSelect" onchange="sortBlogs()">
+            <option value="newest">Sort by: Newest</option>
+            <option value="oldest">Sort by: Oldest</option>
+        </select>
+    </div>
+    <div class="grid" id="blogContainer"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let allBlogs = [];
+
+function showToast(msg){
+    const toast = document.getElementById("toast");
+    toast.innerText = msg;
+    toast.classList.add("show");
+    setTimeout(()=> toast.classList.remove("show"), 3000);
+}
+
+// Fetch blogs from backend
+async function fetchBlogs() {
+    try {
+        const res = await fetch("http://127.0.0.1:8000/blogs", { credentials:"include" });
+        if(!res.ok) throw new Error("Failed to load blogs");
+        allBlogs = await res.json();
+        sortBlogs();
+    } catch(err) { showToast(err.message); }
+}
+
+// Display blogs on UI
+function displayBlogs(blogs){
+    const container = document.getElementById("blogContainer");
+    container.innerHTML = "";
+
+    if(blogs.length === 0){
+        container.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#555;'>No blogs found.</p>";
+        return;
+    }
+
+    blogs.forEach(blog => {
+        const card = document.createElement("div");
+        card.className = "blog-card";
+
+        card.innerHTML = `
+            <div class="blog-title">${blog.title}</div>
+            <div class="blog-author"><i class="fa fa-user"></i> ${blog.owner_email}</div>
+            <button class="btn-view" onclick="viewBlog(${blog.id})"><i class="fa fa-eye"></i> View</button>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// View blog
+// View blog
+async function viewBlog(id){
+    if(!id || isNaN(id)){
+        showToast("Invalid blog ID");
+        return;
+    }
+
+    try {
+        // Optional: check if the blog exists before redirecting
+        const res = await fetch(`http://127.0.0.1:8000/blog/${id}`, {
+            credentials: "include"
+        });
+        if(!res.ok) throw new Error("Blog not found");
+
+        // Redirect to blog view page
+        window.location.href = `/blog/view/${id}`;
+    } catch(err) {
+        showToast(err.message);
+    }
+}
+
+// Filter blogs by search input
+function filterBlogs(){
+    const query = document.getElementById("searchInput").value.toLowerCase();
+    const filtered = allBlogs.filter(blog =>
+        blog.title.toLowerCase().includes(query) || blog.owner_email.toLowerCase().includes(query)
+    );
+    displayBlogs(filtered);
+}
+
+// Sort blogs
+function sortBlogs(){
+    const sortBy = document.getElementById("sortSelect").value;
+    const sorted = [...allBlogs].sort((a,b)=>{
+        if(sortBy === "newest") return new Date(b.created_at) - new Date(a.created_at);
+        return new Date(a.created_at) - new Date(b.created_at);
+    });
+    displayBlogs(sorted);
+}
+
+window.onload = fetchBlogs;
+</script>
+
+</body>
+</html>

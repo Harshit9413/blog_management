@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Blog Status - Client Admin</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
+body { background:linear-gradient(120deg,#0f2027,#203a43,#2c5364); min-height:100vh; color:white; padding:30px; }
+.back-btn { display:inline-block; margin-bottom:20px; padding:8px 18px; background:rgba(255,255,255,0.2); border:2px solid #00d2ff; border-radius:20px; color:#00d2ff; text-decoration:none; transition:0.3s; }
+.back-btn:hover { background:#00d2ff; color:#0f2027; }
+h1 { margin-bottom:24px; color:#00d2ff; }
+table { width:100%; border-collapse:collapse; background:rgba(255,255,255,0.05); border-radius:10px; overflow:hidden; }
+th, td { padding:12px 15px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1); }
+th { background:rgba(0,0,0,0.3); color:#00d2ff; }
+.status-created { color:#4caf50; font-weight:bold; }
+.status-not { color:#f44336; font-weight:bold; }
+.btn-view { background:#4CAF50; border:none; color:white; padding:5px 12px; border-radius:6px; cursor:pointer; font-size:12px; text-decoration:none; }
+.btn-view:hover { background:#388E3C; }
+.no-blog { opacity:0.5; font-size:13px; }
+</style>
+</head>
+<body>
+<a href="/client-admin/dashboard" class="back-btn">← Back to Dashboard</a>
+<h1>📊 Blog Status</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Title</th>
+            <th>Time</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for d in data %}
+        <tr>
+            <td>{{ d.email }}</td>
+            <td class="{{ 'status-created' if d.has_blog else 'status-not' }}">{{ d.status }}</td>
+            <td>{{ d.title }}</td>
+            <td>{{ d.time.strftime("%b %d, %Y %I:%M %p") if d.has_blog else "-" }}</td>
+            <td>
+                {% if d.has_blog %}
+                    <a href="/blog/view/{{ d.user_id }}" class="btn-view">View</a>
+                {% else %}
+                    <span class="no-blog">No Blog</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</body>
+</html>

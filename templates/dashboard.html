@@ -3,143 +3,117 @@
 <head>
 <meta charset="UTF-8">
 <title>Dashboard</title>
-
 <style>
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial, Helvetica, sans-serif;
-}
-
-/* Background */
-body{
-background:linear-gradient(120deg,#667eea,#764ba2);
-min-height:100vh;
-color:white;
-}
-
-/* Navbar */
-.navbar{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:15px 40px;
-background:rgba(0,0,0,0.2);
-backdrop-filter:blur(10px);
-}
-
-.navbar h2{
-letter-spacing:1px;
-}
-
-.logout-btn{
-background:#ff4d4d;
-border:none;
-padding:8px 15px;
-color:white;
-cursor:pointer;
-border-radius:5px;
-text-decoration:none;
-}
-
-/* Container */
-.container{
-padding:40px;
-}
-
-/* Welcome */
-.welcome{
-margin-bottom:30px;
-}
-
-/* Cards */
-.cards{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-gap:20px;
-}
-
-.card{
-background:rgba(255,255,255,0.15);
-padding:25px;
-border-radius:12px;
-text-align:center;
-backdrop-filter:blur(10px);
-transition:0.3s;
-}
-
-.card:hover{
-transform:translateY(-5px);
-}
-
-/* Profile */
-.profile{
-margin-top:40px;
-background:rgba(255,255,255,0.15);
-padding:20px;
-border-radius:10px;
-}
-
-.profile h3{
-margin-bottom:10px;
-}
-
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}
+body{background:linear-gradient(120deg,#667eea,#764ba2);min-height:100vh;color:white;}
+.navbar{display:flex;justify-content:space-between;align-items:center;padding:15px 40px;background:rgba(0,0,0,0.2);backdrop-filter:blur(10px);}
+.logout-btn{background:#ff4d4d;border:none;padding:8px 15px;color:white;cursor:pointer;border-radius:5px;}
+.container{padding:40px;}
+.create-btn{display:inline-block;margin-bottom:30px;padding:12px 25px;background:linear-gradient(135deg,#ff7eb3,#ff758c);color:white;font-weight:bold;text-decoration:none;border-radius:30px;box-shadow:0 4px 15px rgba(0,0,0,0.2);transition:0.3s;}
+.create-btn:hover{transform:translateY(-3px) scale(1.05);}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;}
+.card{background:rgba(255,255,255,0.15);padding:25px;border-radius:12px;text-align:center;backdrop-filter:blur(10px);transition:0.3s;}
+.card:hover{transform:translateY(-5px);}
+.blog-section{margin-top:40px;}
+.blog-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;}
+.blog-item{background:rgba(255,255,255,0.15);padding:18px;border-radius:12px;backdrop-filter:blur(10px);transition:0.3s;}
+.blog-item:hover{transform:translateY(-6px) scale(1.02);}
+.meta{font-size:12px;opacity:0.6;margin-top:8px;}
+.actions{margin-top:12px;display:flex;gap:8px;}
+.actions button{flex:1;padding:6px;border:none;border-radius:6px;cursor:pointer;font-size:12px;}
+.btn-view{ background:#4CAF50; color:white; }
+.btn-delete{ background:#ff4d4d; color:white; }
 </style>
 </head>
-
 <body>
 
 <div class="navbar">
-<h2>My Dashboard</h2>
-
-<!-- Fixed logout button using GET request -->
-<form action="/logout" method="post" style="display:inline;">
-    <button class="logout-btn">Logout</button>
-</form>
-
+    <h2>My Dashboard</h2>
+    <form action="/logout" method="post">
+        <button class="logout-btn">Logout</button>
+    </form>
 </div>
-<form action="/blogs/" method="post">
-  <input type="text" name="title" placeholder="Title" required>
-  <input type="text" name="description" placeholder="Description" required>
-  <textarea name="content" placeholder="Content"></textarea>
-  <button type="submit">Create Blog</button>
-</form>
+
 <div class="container">
+    <h1>Welcome {{ user.email }} 🎉</h1>
+    <a href="/create-blog" class="create-btn">✍️ Create New Blog</a>
 
-<div class="welcome">
-<h1>Login Successful 🎉</h1>
-<h2>Welcome {{ user.email }}</h2>
+    <div class="cards">
+        <div class="card"><h3>Email</h3><p>{{ user.email }}</p></div>
+        <div class="card"><h3>Phone</h3><p>{{ user.phone or "Not set" }}</p></div>
+        <div class="card"><h3>Gender</h3><p>{{ user.gender or "Not set" }}</p></div>
+    </div>
+
+    <div class="blog-section">
+        <h2>My Blogs</h2>
+        <div class="blog-grid" id="blog-list">
+            <p>Loading blogs...</p>
+        </div>
+    </div>
 </div>
 
-<div class="cards">
+<script>
+async function loadBlogs() {
+    const res = await fetch("/blogs/", { credentials: "include" });
+    if (!res.ok) { alert("Error fetching blogs"); return; }
+    const blogs = await res.json();
+    renderBlogs(blogs);
+}
 
-<div class="card">
-<h3>Email</h3>
-<p>{{ user.email }}</p>
-</div>
+function renderBlogs(blogs) {
+    const container = document.getElementById("blog-list");
+    if (!blogs.length) {
+        container.innerHTML = "<p>No blogs yet</p>";
+        return;
+    }
+    container.innerHTML = blogs.map(b => `
+        <div class="blog-item">
+            <h4>${b.title}</h4>
+            <div class="actions">
+                <button class="btn-view" onclick="viewBlog(${b.id})">View</button>
+                <button class="btn-delete" onclick="deleteBlog(${b.id})">Delete</button>
+            </div>
+        </div>
+    `).join("");
+}
 
-<div class="card">
-<h3>Phone Number</h3>
-<p>{{ user.phone }}</p>
-</div>
+function toggleView(id, btn) {
+    const details = document.getElementById("details-" + id);
+    if (details.style.display === "none") {
+        details.style.display = "block";
+        btn.textContent = "Hide";
+    } else {
+        details.style.display = "none";
+        btn.textContent = "View";
+    }
+}
+function viewBlog(id) {
+    window.location.href = `/blog/view/${id}`;
+}
+async function deleteBlog(id) {
+    id = parseInt(id); // convert string to number
+    if (!id || isNaN(id)) {
+        alert("Invalid blog ID");
+        return;
+    }
 
-<div class="card">
-<h3>Gender</h3>
-<p>{{ user.gender }}</p>
-</div>
+    if(!confirm("Delete this blog?")) return;
 
-</div>
+    const res = await fetch(`/blogs/${id}`, {
+        method: "DELETE",
+        credentials: "include"
+    });
 
-<div class="profile">
-<h3>User Information</h3>
-<p><b>Email:</b> {{ user.email }}</p>
-<p><b>Gender:</b> {{ user.gender }}</p>
-<p><b>Status:</b> Active</p>
-</div>
+    if(res.ok) loadBlogs(); 
+    else {
+        const data = await res.json();
+        alert(data.error || "Failed to delete blog");
+    }
+}
 
-</div>
+// Load blogs on page load
+window.onload = loadBlogs;
+</script>
 
 </body>
 </html>

@@ -1,32 +1,20 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, Table, event
 from sqlalchemy.orm import relationship
 from datetime import datetime
-
 from database import Base
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  ASSOCIATION TABLES  (many-to-many join tables)
-# ─────────────────────────────────────────────────────────────────────────────
-
 blog_categories = Table(
-    "blog_categories",
-    Base.metadata,
+    "blog_categories", Base.metadata,
     Column("blog_id",     Integer, ForeignKey("blogs.id",      ondelete="CASCADE"), primary_key=True),
     Column("category_id", Integer, ForeignKey("categories.id", ondelete="CASCADE"), primary_key=True),
 )
 
 blog_tags = Table(
-    "blog_tags",
-    Base.metadata,
+    "blog_tags", Base.metadata,
     Column("blog_id", Integer, ForeignKey("blogs.id", ondelete="CASCADE"), primary_key=True),
     Column("tag_id",  Integer, ForeignKey("tags.id",  ondelete="CASCADE"), primary_key=True),
 )
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  USER MODEL
-# ─────────────────────────────────────────────────────────────────────────────
 
 class User(Base):
     __tablename__ = "users"
@@ -40,14 +28,19 @@ class User(Base):
     otp_expiry = Column(DateTime, nullable=True)
     role       = Column(String, default="user")
     is_active  = Column(Boolean, default=True)
-    last_login = Column(DateTime, nullable=True)
 
     blogs = relationship("Blog", back_populates="owner", cascade="all, delete-orphan")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  CATEGORY MODEL
-# ─────────────────────────────────────────────────────────────────────────────
+# 🔒 Prevent superadmin role from being changed via ORM
+@event.listens_for(User, "before_update")
+def lock_superadmin_role(mapper, connection, target):
+    from sqlalchemy import inspect
+    state = inspect(target)
+    role_history = state.attrs.role.history
+    if role_history.deleted and "superadmin" in role_history.deleted:
+        raise ValueError("Superadmin role cannot be changed!")
+
 
 class Category(Base):
     __tablename__ = "categories"
@@ -60,10 +53,6 @@ class Category(Base):
     blogs = relationship("Blog", secondary=blog_categories, back_populates="categories")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  TAG MODEL
-# ─────────────────────────────────────────────────────────────────────────────
-
 class Tag(Base):
     __tablename__ = "tags"
 
@@ -74,10 +63,6 @@ class Tag(Base):
     blogs = relationship("Blog", secondary=blog_tags, back_populates="tags")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  BLOG MODEL
-# ─────────────────────────────────────────────────────────────────────────────
-
 class Blog(Base):
     __tablename__ = "blogs"
 
@@ -85,10 +70,15 @@ class Blog(Base):
     title       = Column(String(255), nullable=False)
     description = Column(String(500), nullable=False)
     content     = Column(Text, nullable=False)
-    user_id     = Column(Integer, ForeignKey("users.id"), nullable=False)
+     
+    user_id     = Column(Integer, ForeignKey("users.id"))
     created_at  = Column(DateTime, default=datetime.utcnow)
     updated_at  = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    owner      = relationship("User",     back_populates="blogs")
+    owner      = relationship("User", back_populates="blogs")
     categories = relationship("Category", secondary=blog_categories, back_populates="blogs")
     tags       = relationship("Tag",      secondary=blog_tags,       back_populates="blogs")
+
+    @property
+    def owner_email(self):
+        return self.owner.email 

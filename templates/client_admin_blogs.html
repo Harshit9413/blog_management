@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>All Blogs - Client Admin</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:Arial,sans-serif; }
+body { background:linear-gradient(120deg,#0f2027,#203a43,#2c5364); min-height:100vh; color:white; padding:30px; }
+.back-btn { display:inline-block; margin-bottom:20px; padding:8px 18px; background:rgba(255,255,255,0.2); border:2px solid #00d2ff; border-radius:20px; color:#00d2ff; text-decoration:none; transition:0.3s; }
+.back-btn:hover { background:#00d2ff; color:#0f2027; }
+h1 { margin-bottom:24px; color:#00d2ff; }
+.user-block { background:rgba(255,255,255,0.08); border-radius:12px; padding:20px; margin-bottom:20px; backdrop-filter:blur(10px); }
+.user-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.badge { background:rgba(0,210,255,0.3); padding:4px 10px; border-radius:20px; font-size:12px; color:#00d2ff; }
+.blog-row { display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:10px 14px; border-radius:8px; margin-top:8px; }
+.blog-row span { font-size:14px; }
+.blog-row .meta { font-size:11px; opacity:0.6; }
+.btn-del { background:#f44336; border:none; color:white; padding:5px 12px; border-radius:6px; cursor:pointer; font-size:12px; }
+.btn-del:hover { background:#d32f2f; }
+.btn-view { background:#4CAF50; border:none; color:white; padding:5px 12px; border-radius:6px; cursor:pointer; font-size:12px; margin-right:6px; }
+.btn-view:hover { background:#388E3C; }
+.no-blogs { opacity:0.5; font-size:13px; margin-top:8px; }
+</style>
+</head>
+<body>
+<a href="/client-admin/dashboard" class="back-btn">← Back to Dashboard</a>
+<h1>📝 All Users' Blogs</h1>
+{% for item in data %}
+<div class="user-block">
+    <div class="user-header">
+        <div>
+            <strong>{{ item.email }}</strong>
+            <span style="opacity:0.6; font-size:13px; margin-left:8px;">User ID: {{ item.user_id }}</span>
+        </div>
+        <span class="badge">{{ item.blog_count }} blog{{ "s" if item.blog_count != 1 }}</span>
+    </div>
+    {% if item.blogs %}
+        {% for blog in item.blogs %}
+        <div class="blog-row">
+            <div>
+                <span>{{ blog.title }}</span><br>
+                <span class="meta">📅 {{ blog.created_at.strftime("%b %d, %Y") }}</span>
+            </div>
+            <div>
+                <button class="btn-view" onclick="window.location.href='/blog/view/{{ blog.id }}'">View</button>
+                <button class="btn-del" onclick="deleteBlog({{ blog.id }}, this)">Delete</button>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="no-blogs">No blogs created yet.</p>
+    {% endif %}
+</div>
+{% endfor %}
+<script>
+async function deleteBlog(id, btn) {
+    if (!confirm("Delete this blog permanently?")) return;
+    const res = await fetch(`/client-admin/blogs/${id}`, {
+        method: "DELETE",
+        credentials: "include"
+    });
+    if (res.ok) {
+        btn.closest(".blog-row").remove();
+    } else {
+        const data = await res.json();
+        alert(data.error || "Failed to delete");
+    }
+}
+</script>
+</body>
+</html>
