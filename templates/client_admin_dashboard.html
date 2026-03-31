@@ -10,16 +10,26 @@ body{ background:linear-gradient(120deg,#0f2027,#203a43,#2c5364); min-height:100
 .navbar h2{ color:#00d2ff; letter-spacing:1px; }
 .nav-right{ display:flex; align-items:center; gap:15px; }
 .logout-btn{ background:#00d2ff; border:none; padding:8px 15px; color:#0f2027; cursor:pointer; border-radius:5px; font-weight:bold; }
-.container{ padding:40px; max-width:1100px; margin:0 auto; }
+.container{ padding:40px; max-width:1200px; margin:0 auto; }
 .welcome{ margin-bottom:30px; }
 .welcome h1{ font-size:28px; }
 .welcome p{ opacity:0.7; margin-top:5px; }
-.nav-buttons{ display:flex; gap:12px; margin-bottom:25px; flex-wrap:wrap; }
-.nav-btn{ padding:10px 20px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; font-size:14px; text-decoration:none; color:#0f2027; }
-.nav-btn-blogs{ background:#00d2ff; }
-.nav-btn-status{ background:#ff9800; }
-.nav-btn-blogs:hover{ background:#00b8d9; }
-.nav-btn-status:hover{ background:#e68900; }
+.action-buttons{ display:flex; gap:15px; margin-bottom:35px; flex-wrap:wrap; }
+.action-btn{ display:inline-flex; align-items:center; gap:8px; padding:14px 28px; border-radius:12px; text-decoration:none; font-weight:bold; font-size:15px; transition:0.3s; border:none; cursor:pointer; }
+.action-btn:hover{ transform:translateY(-3px); box-shadow:0 8px 25px rgba(0,0,0,0.3); }
+.btn-blogs{ background:linear-gradient(135deg,#00d2ff,#0099cc); color:white; }
+.btn-create{ background:linear-gradient(135deg,#4CAF50,#45a049); color:white; }
+.btn-status{ background:linear-gradient(135deg,#ff9800,#f57c00); color:white; }
+.stats{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:20px; margin-bottom:40px; }
+.stat-card{ background:rgba(255,255,255,0.08); padding:25px; border-radius:12px; text-align:center; backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1); transition:0.3s; }
+.stat-card:hover{ transform:translateY(-4px); border-color:rgba(0,210,255,0.4); }
+.stat-card h3{ font-size:36px; color:#00d2ff; margin-bottom:5px; }
+.stat-card p{ opacity:0.7; }
+.section{ background:rgba(255,255,255,0.08); padding:25px; border-radius:12px; margin-bottom:20px; border:1px solid rgba(255,255,255,0.1); }
+.section h3{ margin-bottom:15px; color:#00d2ff; }
+.section p{ opacity:0.8; line-height:1.6; }
+.section a{ color:#00d2ff; text-decoration:none; font-weight:bold; }
+.section a:hover{ text-decoration:underline; }
 .search-bar{ margin-bottom:25px; display:flex; gap:10px; }
 .search-bar input{ flex:1; padding:12px; border:none; border-radius:6px; font-size:14px; }
 .search-bar button{ padding:12px 20px; border:none; border-radius:6px; background:#00d2ff; color:#0f2027; cursor:pointer; font-weight:bold; }
@@ -35,6 +45,30 @@ th{ background:rgba(0,0,0,0.3); color:#00d2ff; }
 .status-active{ color:#4caf50; }
 .status-blocked{ color:#f44336; }
 #msg{ text-align:center; margin-bottom:15px; font-size:14px; }
+.blog-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:15px; margin-top:15px; }
+.blog-item{ background:rgba(255,255,255,0.1); padding:16px; border-radius:10px; transition:0.3s; }
+.blog-item:hover{ transform:translateY(-4px); background:rgba(255,255,255,0.15); }
+.blog-item h4{ margin-bottom:4px; }
+.blog-item .blog-meta{ font-size:12px; opacity:0.6; margin-bottom:8px; }
+.blog-actions{ display:flex; gap:6px; margin-top:10px; }
+.blog-actions button{ padding:5px 12px; border:none; border-radius:6px; cursor:pointer; font-size:12px; }
+.btn-view{ background:#4CAF50; color:white; }
+.btn-view:hover{ background:#388E3C; }
+.btn-del{ background:#f44336; color:white; }
+.btn-del:hover{ background:#d32f2f; }
+/* Modal */
+.modal-overlay{ display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:999; justify-content:center; align-items:center; backdrop-filter:blur(5px); }
+.modal-overlay.active{ display:flex; }
+.modal{ background:linear-gradient(135deg,#0f2027,#203a43); border-radius:16px; padding:35px; max-width:700px; width:90%; max-height:80vh; overflow-y:auto; color:white; box-shadow:0 10px 40px rgba(0,0,0,0.4); position:relative; animation:slideUp 0.3s ease; }
+@keyframes slideUp{ from{opacity:0;transform:translateY(30px);} to{opacity:1;transform:translateY(0);} }
+.modal-close{ position:absolute; top:15px; right:20px; background:none; border:none; color:white; font-size:24px; cursor:pointer; opacity:0.7; transition:0.2s; }
+.modal-close:hover{ opacity:1; transform:scale(1.2); }
+.modal h2{ font-size:24px; margin-bottom:10px; padding-right:30px; }
+.modal .modal-meta{ font-size:13px; opacity:0.6; margin-bottom:8px; }
+.modal .modal-divider{ border:none; border-top:1px solid rgba(255,255,255,0.2); margin:18px 0; }
+.modal .modal-desc{ font-size:15px; opacity:0.85; font-style:italic; margin-bottom:15px; line-height:1.6; }
+.modal .modal-content{ font-size:14px; line-height:1.8; white-space:pre-wrap; }
+.modal-loading{ text-align:center; padding:40px; opacity:0.7; }
 </style>
 </head>
 <body>
@@ -50,32 +84,167 @@ th{ background:rgba(0,0,0,0.3); color:#00d2ff; }
 <div class="container">
     <div class="welcome">
         <h1>Client Admin Dashboard</h1>
-        <p>Manage regular users from here</p>
+        <p>Welcome back, {{ user.email }}</p>
     </div>
-    <div class="nav-buttons">
-        <a href="/client-admin/blogs" class="nav-btn nav-btn-blogs">📝 Manage Blogs</a>
-        <a href="/client-admin/blog-status" class="nav-btn nav-btn-status">📊 Blog Status</a>
+
+    <div class="action-buttons">
+        <a href="/client-admin/blogs" class="action-btn btn-blogs">📝 Manage All Blogs</a>
+        <a href="/client-admin/create-blog" class="action-btn btn-create">✍️ Create New Blog</a>
+        <a href="/client-admin/blog-status" class="action-btn btn-status">📊 Blog Status</a>
     </div>
-    <div class="search-bar">
-        <input id="search" type="text" placeholder="Search users by email...">
-        <button onclick="loadUsers()">Search</button>
+
+    <div class="stats">
+        <div class="stat-card"><h3 id="total-users">-</h3><p>Total Users</p></div>
+        <div class="stat-card"><h3 id="total-blogs">-</h3><p>Total Blogs</p></div>
+        
     </div>
-    <p id="msg"></p>
-    <table>
-        <thead>
-            <tr><th>ID</th><th>Email</th><th>Status</th><th>Actions</th></tr>
-        </thead>
-        <tbody id="user-table">
-            <tr><td colspan="4" style="text-align:center;">Loading...</td></tr>
-        </tbody>
-    </table>
+
+    My Blogs Section
+    <div class="section">
+        <h3>📝 My Blogs</h3>
+        <div class="blog-grid" id="my-blog-list">
+            <p>Loading...</p>
+        </div>
+    </div>
+
+    <!-- All Users Blogs Section -->
+    <div class="section">
+        <h3>📚 All Users' Blogs</h3>
+        <div class="blog-grid" id="all-blog-list">
+            <p>Loading...</p>
+        </div>
+    </div>
+
+    <!-- Manage Users Section -->
+    <div class="section">
+        <h3>👥 Manage Users</h3>
+        <div class="search-bar">
+            <input id="search" type="text" placeholder="Search users by email...">
+            <button onclick="loadUsers()">Search</button>
+        </div>
+        <p id="msg"></p>
+        <table>
+            <thead>
+                <tr><th>ID</th><th>Email</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="user-table">
+                <tr><td colspan="4" style="text-align:center;">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
 </div>
+
+<!-- Blog Detail Modal -->
+<div class="modal-overlay" id="blog-modal" onclick="closeModal(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-close" onclick="closeModalDirect()">&times;</button>
+        <div id="modal-body">
+            <p class="modal-loading">Loading...</p>
+        </div>
+    </div>
+</div>
+
 <script>
 function showMsg(text, color) {
     const el = document.getElementById("msg");
     el.innerText = text; el.style.color = color || "lightgreen";
     setTimeout(() => el.innerText = "", 3000);
 }
+
+// Load stats
+async function loadStats() {
+    const res = await fetch("/client-admin/stats", { credentials: "include" });
+    if (res.ok) {
+        const data = await res.json();
+        document.getElementById("total-users").innerText = data.total_users || 0;
+        document.getElementById("total-blogs").innerText = data.total_blogs || 0;
+        document.getElementById("my-blogs").innerText = data.my_blogs || 0;
+    }
+}
+
+// Load my blogs
+async function loadMyBlogs() {
+    const res = await fetch("/client-admin/my-blogs-json", { credentials: "include" });
+    const container = document.getElementById("my-blog-list");
+    if (!res.ok) { container.innerHTML = "<p>Failed to load</p>"; return; }
+    const blogs = await res.json();
+    if (!blogs.length) { container.innerHTML = "<p style='opacity:0.5;'>No blogs created yet.</p>"; return; }
+    container.innerHTML = blogs.map(b => `
+        <div class="blog-item">
+            <h4>${b.title}</h4>
+            <p class="blog-meta">📅 ${b.created_at ? new Date(b.created_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : ''}</p>
+            <div class="blog-actions">
+                <button class="btn-view" onclick="viewBlog(${b.id})">View</button>
+                <button class="btn-del" onclick="deleteBlog(${b.id})">Delete</button>
+            </div>
+        </div>
+    `).join("");
+}
+
+// Load all users blogs
+async function loadAllBlogs() {
+    const res = await fetch("/client-admin/all-blogs-json", { credentials: "include" });
+    const container = document.getElementById("all-blog-list");
+    if (!res.ok) { container.innerHTML = "<p>Failed to load</p>"; return; }
+    const blogs = await res.json();
+    if (!blogs.length) { container.innerHTML = "<p style='opacity:0.5;'>No blogs found.</p>"; return; }
+    container.innerHTML = blogs.map(b => `
+        <div class="blog-item">
+            <h4>${b.title}</h4>
+            <p class="blog-meta">✍️ ${b.owner_email} · 📅 ${b.created_at ? new Date(b.created_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : ''}</p>
+            <div class="blog-actions">
+                <button class="btn-view" onclick="viewBlog(${b.id})">View</button>
+                <button class="btn-del" onclick="deleteBlog(${b.id})">Delete</button>
+            </div>
+        </div>
+    `).join("");
+}
+
+// View blog in modal
+async function viewBlog(id) {
+    const modal = document.getElementById("blog-modal");
+    const body = document.getElementById("modal-body");
+    modal.classList.add("active");
+    body.innerHTML = '<p class="modal-loading">Loading blog...</p>';
+    try {
+        const res = await fetch(`/blog/${id}`, { credentials: "include" });
+        if (!res.ok) { body.innerHTML = '<p class="modal-loading">Blog not found</p>'; return; }
+        const blog = await res.json();
+        body.innerHTML = `
+            <h2>${blog.title}</h2>
+            <p class="modal-meta">✍️ By: <strong>${blog.owner_email || 'Unknown'}</strong></p>
+            <p class="modal-meta">📅 ${blog.created_at ? new Date(blog.created_at).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}) : ''}</p>
+            <hr class="modal-divider">
+            ${blog.description ? `<p class="modal-desc">${blog.description}</p>` : ''}
+            <div class="modal-content">${blog.content}</div>
+        `;
+    } catch (err) {
+        body.innerHTML = '<p class="modal-loading">Error loading blog</p>';
+    }
+}
+
+function closeModal(event) {
+    if (event.target === document.getElementById("blog-modal"))
+        document.getElementById("blog-modal").classList.remove("active");
+}
+function closeModalDirect() {
+    document.getElementById("blog-modal").classList.remove("active");
+}
+
+// Delete blog
+async function deleteBlog(id) {
+    if (!confirm("Delete this blog?")) return;
+    const res = await fetch(`/client-admin/blogs/${id}`, { method: "DELETE", credentials: "include" });
+    if (res.ok) {
+        loadMyBlogs();
+        loadAllBlogs();
+        loadStats();
+    } else {
+        const data = await res.json();
+        alert(data.error || "Failed to delete");
+    }
+}
+// Load users
 async function loadUsers() {
     const search = document.getElementById("search").value.trim();
     const res = await fetch("/client-admin/users-json?search=" + encodeURIComponent(search), { credentials: "include" });
@@ -98,11 +267,13 @@ async function loadUsers() {
         </tr>
     `).join("");
 }
+
 async function toggleUser(id) {
     const res = await fetch("/client-admin/toggle-user/" + id, { method: "POST", credentials: "include" });
     const data = await res.json();
     if (res.ok) { showMsg("Status updated"); loadUsers(); } else showMsg(data.error, "#ff6b6b");
 }
+
 async function updateEmail(id) {
     const email = document.getElementById("email-" + id).value.trim();
     const res = await fetch("/client-admin/update-email/" + id, {
@@ -110,4 +281,22 @@ async function updateEmail(id) {
         headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email })
     });
     const data = await res.json();
-    if (res.ok) showMsg("Em
+    if (res.ok) showMsg("Email updated"); else showMsg(data.error, "#ff6b6b");
+}
+
+async function deleteUser(id) {
+    if (!confirm("Delete this user?")) return;
+    const res = await fetch("/client-admin/delete-user/" + id, { method: "POST", credentials: "include" });
+    const data = await res.json();
+    if (res.ok) { showMsg("User deleted"); loadUsers(); loadStats(); } else showMsg(data.error, "#ff6b6b");
+}
+
+document.addEventListener("keydown", function(e) { if (e.key === "Escape") closeModalDirect(); });
+
+loadUsers();
+loadStats();
+loadMyBlogs();
+loadAllBlogs();
+</script>
+</body>
+</html>

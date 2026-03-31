@@ -2,24 +2,26 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Blog Status - Client Admin</title>
+<title>Blog Status - Super Admin</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
-body { background:linear-gradient(120deg,#0f2027,#203a43,#2c5364); min-height:100vh; color:white; padding:30px; }
-.back-btn { display:inline-block; margin-bottom:20px; padding:8px 18px; background:rgba(255,255,255,0.1); border:2px solid #00d2ff; border-radius:20px; color:#00d2ff; text-decoration:none; transition:0.3s; font-weight:bold; }
-.back-btn:hover { background:#00d2ff; color:#0f2027; }
-h1 { margin-bottom:24px; color:#00d2ff; }
+body { background:linear-gradient(120deg,#1a1a2e,#16213e); min-height:100vh; color:white; padding:30px; }
+.back-btn { display:inline-block; margin-bottom:20px; padding:8px 18px; background:rgba(255,255,255,0.1); border:2px solid #e94560; border-radius:20px; color:#e94560; text-decoration:none; transition:0.3s; font-weight:bold; }
+.back-btn:hover { background:#e94560; color:white; }
+h1 { margin-bottom:24px; color:#e94560; }
 table { width:100%; border-collapse:collapse; background:rgba(255,255,255,0.05); border-radius:10px; overflow:hidden; }
 th, td { padding:14px 18px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1); }
-th { background:rgba(0,0,0,0.3); color:#00d2ff; font-size:14px; }
+th { background:rgba(0,0,0,0.3); color:#e94560; font-size:14px; }
+td { font-size:14px; }
 .status-created { color:#4caf50; font-weight:bold; }
 .status-not { color:#f44336; font-weight:bold; }
-.btn-view { background:#4CAF50; border:none; color:white; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:12px; transition:0.2s; }
+.btn-view { background:#4CAF50; border:none; color:white; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:12px; text-decoration:none; display:inline-block; transition:0.2s; }
 .btn-view:hover { background:#388E3C; }
 .no-blog { opacity:0.5; font-size:13px; }
+/* Modal */
 .modal-overlay{ display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:999; justify-content:center; align-items:center; backdrop-filter:blur(5px); }
 .modal-overlay.active{ display:flex; }
-.modal{ background:linear-gradient(135deg,#0f2027,#203a43); border-radius:16px; padding:35px; max-width:700px; width:90%; max-height:80vh; overflow-y:auto; color:white; box-shadow:0 10px 40px rgba(0,0,0,0.4); position:relative; animation:slideUp 0.3s ease; }
+.modal{ background:linear-gradient(135deg,#1a1a2e,#16213e); border-radius:16px; padding:35px; max-width:700px; width:90%; max-height:80vh; overflow-y:auto; color:white; box-shadow:0 10px 40px rgba(0,0,0,0.4); position:relative; animation:slideUp 0.3s ease; }
 @keyframes slideUp{ from{opacity:0;transform:translateY(30px);} to{opacity:1;transform:translateY(0);} }
 .modal-close{ position:absolute; top:15px; right:20px; background:none; border:none; color:white; font-size:24px; cursor:pointer; opacity:0.7; }
 .modal-close:hover{ opacity:1; }
@@ -32,11 +34,17 @@ th { background:rgba(0,0,0,0.3); color:#00d2ff; font-size:14px; }
 </style>
 </head>
 <body>
-<a href="/client-admin/dashboard" class="back-btn">← Back to Dashboard</a>
-<h1>📊 Blog Status</h1>
+<a href="/super-admin/dashboard" class="back-btn">← Back to Dashboard</a>
+<h1>📊 Blog Status - All Users</h1>
 <table>
     <thead>
-        <tr><th>Email</th><th>Status</th><th>Title</th><th>Time</th><th>Action</th></tr>
+        <tr>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Title</th>
+            <th>Time</th>
+            <th>Action</th>
+        </tr>
     </thead>
     <tbody>
         {% for d in data %}
@@ -57,6 +65,7 @@ th { background:rgba(0,0,0,0.3); color:#00d2ff; font-size:14px; }
     </tbody>
 </table>
 
+<!-- Blog Detail Modal -->
 <div class="modal-overlay" id="blog-modal" onclick="closeModal(event)">
     <div class="modal" onclick="event.stopPropagation()">
         <button class="modal-close" onclick="closeModalDirect()">&times;</button>

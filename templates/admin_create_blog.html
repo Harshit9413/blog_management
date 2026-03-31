@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Create Blog</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:Arial,sans-serif; }
+body {
+    background: linear-gradient(120deg,#1a1a2e,#16213e);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+.card {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 40px;
+    max-width: 620px;
+    width: 100%;
+    color: white;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+.card h2 { margin-bottom: 28px; font-size: 26px; }
+label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    opacity: 0.85;
+    font-weight: bold;
+}
+input, textarea {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 8px;
+    border: none;
+    background: rgba(255,255,255,0.15);
+    color: white;
+    font-size: 14px;
+    margin-bottom: 18px;
+    outline: none;
+    transition: background 0.2s;
+}
+input:focus, textarea:focus { background: rgba(255,255,255,0.25); }
+input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.5); }
+textarea { height: 160px; resize: vertical; }
+.submit-btn {
+    width: 100%;
+    padding: 13px;
+    background: linear-gradient(135deg,#e94560,#c81d4e);
+    border: none;
+    border-radius: 30px;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-top: 4px;
+}
+.submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+.submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.back-btn {
+    display: inline-block;
+    margin-bottom: 22px;
+    padding: 7px 16px;
+    background: rgba(255,255,255,0.15);
+    border: 1.5px solid rgba(255,255,255,0.5);
+    border-radius: 20px;
+    color: white;
+    text-decoration: none;
+    font-size: 13px;
+    transition: 0.3s;
+}
+.back-btn:hover { background: rgba(255,255,255,0.3); }
+#msg {
+    margin-top: 14px;
+    text-align: center;
+    font-size: 14px;
+    min-height: 20px;
+    border-radius: 8px;
+    padding: 8px;
+}
+.error-msg { background: rgba(255,77,77,0.3); display: block; }
+.success-msg { background: rgba(100,255,150,0.3); display: block; }
+.char-count {
+    font-size: 11px;
+    opacity: 0.6;
+    text-align: right;
+    margin-top: -14px;
+    margin-bottom: 14px;
+}
+</style>
+</head>
+<body>
+<div class="card">
+    <a href="{{ back_url }}" class="back-btn">← Back to Dashboard</a>
+    <h2>✍️ Create New Blog</h2>
+
+    <label for="title">Title *</label>
+    <input type="text" id="title" placeholder="Enter a catchy blog title..." maxlength="255"
+        oninput="updateCount('title','title-count',255)">
+    <div class="char-count"><span id="title-count">0</span>/255</div>
+
+    <label for="description">Description *</label>
+    <input type="text" id="description" placeholder="Short summary of your blog..." maxlength="500"
+        oninput="updateCount('description','desc-count',500)">
+    <div class="char-count"><span id="desc-count">0</span>/500</div>
+
+    <label for="content">Content *</label>
+    <textarea id="content" placeholder="Write your full blog content here..."
+        oninput="autoResize(this)"></textarea>
+
+    <button class="submit-btn" id="submit-btn" onclick="submitBlog()">
+        🚀 Publish Blog
+    </button>
+
+    <div id="msg" style="display:none;"></div>
+</div>
+
+<script>
+const POST_URL = "{{ post_url }}";
+
+function updateCount(inputId, countId, max) {
+    document.getElementById(countId).textContent = document.getElementById(inputId).value.length;
+}
+
+function autoResize(el) {
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+}
+
+function showMsg(text, type) {
+    const msg = document.getElementById("msg");
+    msg.textContent = text;
+    msg.className = type === "error" ? "error-msg" : "success-msg";
+    msg.style.display = "block";
+}
+
+async function submitBlog() {
+    const title       = document.getElementById("title").value.trim();
+    const description = document.getElementById("description").value.trim();
+    const content     = document.getElementById("content").value.trim();
+    const btn         = document.getElementById("submit-btn");
+
+    if (!title) { showMsg("Title is required!", "error"); return; }
+    if (!description) { showMsg("Description is required!", "error"); return; }
+    if (!content) { showMsg("Content is required!", "error"); return; }
+
+    btn.disabled = true;
+    btn.textContent = "Publishing...";
+
+    try {
+        const res = await fetch(POST_URL, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title: title,
+                description: description,
+                content: content,
+                category_ids: [],
+                tag_ids: []
+            })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            showMsg("Blog published! Redirecting...", "success");
+            setTimeout(() => {
+                window.location.href = `/blog/view/${data.blog_id}`;
+            }, 1000);
+        } else {
+            showMsg(data.error || data.detail || "Failed to create blog", "error");
+            btn.disabled = false;
+            btn.textContent = "🚀 Publish Blog";
+        }
+    } catch (err) {
+        showMsg("Network error. Try again.", "error");
+        btn.disabled = false;
+        btn.textContent = "🚀 Publish Blog";
+    }
+}
+</script>
+</body>
+</html>
